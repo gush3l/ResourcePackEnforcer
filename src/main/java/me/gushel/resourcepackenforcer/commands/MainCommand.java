@@ -9,11 +9,14 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Objects;
 
 public class MainCommand implements CommandExecutor {
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         FileConfiguration config = ResourcePackEnforcer.getInstance().getConfig();
         if (sender instanceof ConsoleCommandSender){
             if (args.length == 1) {
@@ -32,7 +35,7 @@ public class MainCommand implements CommandExecutor {
                         return true;
                     }
                     Send.onCommand(target);
-                    sender.sendMessage(Util.color(config.getString("messages.send-texturepack").replace("%player%",target.getName())));
+                    sender.sendMessage(Util.color(Objects.requireNonNull(config.getString("messages.send-texturepack")).replace("%player%",target.getName())));
                 }
                 return true;
             }
@@ -63,7 +66,7 @@ public class MainCommand implements CommandExecutor {
                     return true;
                 }
                 Send.onCommand(target);
-                player.sendMessage(Util.papiColor(player,config.getString("messages.send-texturepack").replace("%player%",target.getName())));
+                player.sendMessage(Util.papiColor(player, Objects.requireNonNull(config.getString("messages.send-texturepack")).replace("%player%",target.getName())));
             }
             return true;
         }

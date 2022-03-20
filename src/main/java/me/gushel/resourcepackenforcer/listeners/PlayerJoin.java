@@ -22,10 +22,14 @@ public class PlayerJoin implements Listener {
 
     @EventHandler
     @SuppressWarnings( "deprecation" )
-    public void onPlayerJoin(PlayerJoinEvent event){
+    public void onPlayerJoin(PlayerJoinEvent event) {
         Logger log = ResourcePackEnforcer.getInstance().getLogger();
         Player player = event.getPlayer();
-        ResourcePackEnforcer.useRP.remove(player);
+
+        me.gushel.resourcepackenforcer.objects.Player p = new me.gushel.resourcepackenforcer.objects.Player(player.getUniqueId());
+
+        ResourcePackEnforcer.getInstance().getPlayerManager().removePlayer(player.getUniqueId());
+
         FileConfiguration config = ResourcePackEnforcer.getInstance().getConfig();
 
         if (Objects.equals(config.getString("settings.resourcepack"), "NO_LINK") && config.getBoolean("settings.no-resourcepack-link-warning")){
@@ -36,8 +40,8 @@ public class PlayerJoin implements Listener {
         if (player.hasPermission(Objects.requireNonNull(config.getString("settings.bypass-permission")))) return;
         repeatCount = config.getInt("countdown-timer.timer")+config.getInt("countdown-timer.time-before-timer")+1;
         taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(ResourcePackEnforcer.getInstance(), () -> {
-            --repeatCount;
             if (repeatCount<config.getInt("countdown-timer.timer")+1) {
+                p.setTaskID(taskID);
                 if (config.getBoolean("countdown-timer.titles.enable"))
                     player.sendTitle(Util.papiColor(player, config.getString("countdown-timer.titles.title")).replace("%time%", String.valueOf(repeatCount))
                         , Util.papiColor(player, config.getString("countdown-timer.titles.subtitle")).replace("%time%", String.valueOf(repeatCount)));
@@ -48,16 +52,21 @@ public class PlayerJoin implements Listener {
                 }
 
             }
-            if (repeatCount==0) cancelTask(taskID,player);
+
+            --repeatCount;
+
+            if (repeatCount <= 0) {
+                player.setResourcePack(Objects.requireNonNull(config.getString("settings.resourcepack")));
+                cancelTask(p.getTaskID());
+            }
         }, 0, 20);
+
         if (config.getBoolean("effects.enable-blindness")) player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS,9999,200));
         if (config.getBoolean("effects.enable-slowness")) player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW,9999,200));
     }
 
-    private void cancelTask(int taskID,Player player){
-        FileConfiguration config = ResourcePackEnforcer.getInstance().getConfig();
+    private void cancelTask(int taskID){
         Bukkit.getScheduler().cancelTask(taskID);
-        player.setResourcePack(Objects.requireNonNull(config.getString("settings.resourcepack")));
     }
 
 }

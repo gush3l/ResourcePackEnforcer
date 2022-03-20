@@ -9,13 +9,15 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerResourcePackStatusEvent;
 import org.bukkit.potion.PotionEffectType;
 
+import java.util.Objects;
+
 public class PlayerResourcePackStatus implements Listener {
 
     @EventHandler
     public void onResourcePack(PlayerResourcePackStatusEvent event){
         Player player = event.getPlayer();
         FileConfiguration config = ResourcePackEnforcer.getInstance().getConfig();
-        if (player.hasPermission(config.getString("settings.bypass-permission"))) return;
+        if (player.hasPermission(Objects.requireNonNull(config.getString("settings.bypass-permission")))) return;
         if (event.getStatus().equals(PlayerResourcePackStatusEvent.Status.SUCCESSFULLY_LOADED)){
             player.removePotionEffect(PotionEffectType.BLINDNESS);
             player.removePotionEffect(PotionEffectType.SLOW);
@@ -25,7 +27,10 @@ public class PlayerResourcePackStatus implements Listener {
                             .getInstance().getServer().getConsoleSender(), Util.papi(player,s.replace("%player%",player.getName())));
                 }
             }
-            ResourcePackEnforcer.useRP.add(player);
+            me.gushel.resourcepackenforcer.objects.Player p = new me.gushel.resourcepackenforcer.objects.Player(player.getUniqueId());
+            p.setStatus(PlayerResourcePackStatusEvent.Status.ACCEPTED);
+
+            ResourcePackEnforcer.getInstance().getPlayerManager().addPlayer(p);
             return;
         }
         if (event.getStatus().equals(PlayerResourcePackStatusEvent.Status.DECLINED)){
@@ -48,7 +53,11 @@ public class PlayerResourcePackStatus implements Listener {
                             .getInstance().getServer().getConsoleSender(), Util.papi(player,s.replace("%player%",player.getName())));
                 }
             }
-            ResourcePackEnforcer.useRP.add(player);
+
+            me.gushel.resourcepackenforcer.objects.Player p = new me.gushel.resourcepackenforcer.objects.Player(player.getUniqueId());
+            p.setStatus(PlayerResourcePackStatusEvent.Status.ACCEPTED);
+
+            ResourcePackEnforcer.getInstance().getPlayerManager().addPlayer(p);
             return;
         }
         if (event.getStatus().equals(PlayerResourcePackStatusEvent.Status.FAILED_DOWNLOAD)){

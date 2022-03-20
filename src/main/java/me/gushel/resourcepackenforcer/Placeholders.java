@@ -9,12 +9,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class Placeholders extends PlaceholderExpansion {
 
-    private final ResourcePackEnforcer plugin;
-
-    public Placeholders(ResourcePackEnforcer plugin) {
-        this.plugin = plugin;
-    }
-
     @Override
     public @NotNull String getIdentifier() {
         return "resourcepackenforcer";
@@ -46,16 +40,22 @@ public class Placeholders extends PlaceholderExpansion {
         Player player1 = player.getPlayer();
 
         if (identifier.equals("boolean")){
-            if (ResourcePackEnforcer.useRP.contains(player1)) return "yes";
-            return "no";
+            try {
+                assert player1 != null;
+                if (ResourcePackEnforcer.getInstance().getPlayerManager().getPlayer(player1.getUniqueId()) != null)
+                    return "yes";
+                return "no";
+            } catch(NullPointerException e) {
+                return null;
+            }
         }
 
         if (identifier.equals("using")){
-            return String.valueOf(ResourcePackEnforcer.useRP.size());
+            return String.valueOf(ResourcePackEnforcer.getInstance().getPlayerManager().getCache().size());
         }
 
         if (identifier.equals("notusing")){
-            return String.valueOf(Bukkit.getServer().getOnlinePlayers().size()-ResourcePackEnforcer.useRP.size());
+            return String.valueOf(Bukkit.getServer().getOnlinePlayers().size()-ResourcePackEnforcer.getInstance().getPlayerManager().getCache().size());
         }
 
         if (identifier.equals("link")){

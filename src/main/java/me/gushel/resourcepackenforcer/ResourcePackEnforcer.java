@@ -3,46 +3,54 @@ package me.gushel.resourcepackenforcer;
 import me.gushel.resourcepackenforcer.commands.MainCommand;
 import me.gushel.resourcepackenforcer.listeners.PlayerJoin;
 import me.gushel.resourcepackenforcer.listeners.PlayerResourcePackStatus;
+import me.gushel.resourcepackenforcer.managers.PlayerManager;
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Objects;
 import java.util.logging.Logger;
 
 public final class ResourcePackEnforcer extends JavaPlugin {
 
     private static ResourcePackEnforcer plugin;
-
-    public static List<Player> useRP;
+    private PlayerManager playerManager;
 
     @Override
     public void onEnable() {
+        saveDefaultConfig();
+        getConfig().options().copyDefaults(true);
+
         Logger log = this.getLogger();
         FileConfiguration config = this.getConfig();
-        useRP = new ArrayList<>();
-        saveDefaultConfig();
-        Config.setup();
-        Config.get().options().copyDefaults(true);
-        Config.save();
+
         plugin = this;
-        this.getCommand("resourcepackenforcer").setExecutor(new MainCommand());
+        Objects.requireNonNull(this.getCommand("resourcepackenforcer")).setExecutor(new MainCommand());
+
         getServer().getPluginManager().registerEvents(new PlayerJoin(), this);
         getServer().getPluginManager().registerEvents(new PlayerResourcePackStatus(), this);
-        new Placeholders(this).register();
-        if (config.getString("settings.resourcepack").equals("NO_LINK")){
+
+        playerManager = new PlayerManager();
+        playerManager.task();
+
+        new Placeholders().register();
+
+        if (Objects.equals(config.getString("settings.resourcepack"), "NO_LINK")){
             log.warning("You didn't set any resourcepack link in the config file! Please do that and reload the plugin in order to send a resourcepack to players!");
         }
     }
 
     @Override
     public void onDisable() {
-        // Plugin shutdown logic
+        Bukkit.getScheduler().cancelTasks(this);
+        playerManager.clear();
     }
 
     public static ResourcePackEnforcer getInstance(){
         return plugin;
     }
 
+    public PlayerManager getPlayerManager() {
+        return playerManager;
+    }
 }
